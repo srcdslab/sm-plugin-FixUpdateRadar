@@ -42,7 +42,7 @@ public void OnClientDisconnect(int client)
 	g_bConnected[client] = false;
 }
 
-public Action Hook_UpdateRadar(UserMsg msg_id, Handle bf, const char[] players, int playersNum, bool reliable, bool init)
+public Action Hook_UpdateRadar(UserMsg msg_id, Handle bf, const int[] players, int playersNum, bool reliable, bool init)
 {
 	if (BfGetNumBytesLeft(bf) > 253)
 	{
