@@ -2,9 +2,6 @@
 
 #include <sourcemod>
 
-#define PLUGIN_NAME 	"UpdateRadarFix"
-#define PLUGIN_VERSION 	"1.0"
-
 #pragma newdecls required
 
 // Should not need more than 16
@@ -19,16 +16,15 @@ bool g_bConnected[MAXPLAYERS+1];
 
 public Plugin myinfo =
 {
-	name = PLUGIN_NAME,
+	name = "Fix Update Radar",
 	author = "GoD-Tony, maxime1907",
 	description = "Fixes the UpdateRadar usermessage on large servers",
-	version = PLUGIN_VERSION,
+	version = "1.0.0",
 	url = "http://www.sourcemod.net/"
 };
 
 public void OnPluginStart()
 {
-	CreateConVar("sm_updateradar_version", PLUGIN_VERSION, PLUGIN_NAME, FCVAR_NOTIFY|FCVAR_DONTRECORD);
 	HookUserMessage(GetUserMessageId("UpdateRadar"), Hook_UpdateRadar, true);
 }
 
@@ -104,13 +100,13 @@ public void SendQueuedMsg(int index)
 			i--;
 		}
 	}
-	
+
 	// Don't send the message if there are no recipients.
 	if(g_iPlayersNum[index] <= 0)
 		return;
-	
+
 	Handle hBf = StartMessage("UpdateRadar", g_iPlayers[index], g_iPlayersNum[index], USERMSG_BLOCKHOOKS);
-	
+
 	int count = 0;
 	while (g_iBits[index][count] != -1)
 	{
