@@ -14,17 +14,17 @@ This repository contains the **FixUpdateRadar** SourcePawn plugin for SourceMod,
 
 ### Core Technologies
 - **Language**: SourcePawn (.sp files)
-- **Platform**: SourceMod 1.11.0+ (currently using 1.11.0-git6917)
-- **Build System**: SourceKnight (modern SourcePawn build tool)
-- **Compiler**: SourcePawn compiler via SourceKnight
+- **Platform**: SourceMod 1.12.x
+- **Build System**: Native GitHub Actions (rumblefrog/setup-sp + spcomp)
+- **Compiler**: SourcePawn compiler (spcomp) via rumblefrog/setup-sp
 - **CI/CD**: GitHub Actions with automated building and releases
 
-### Build System (SourceKnight)
-This project uses **SourceKnight** instead of traditional spcomp compilation:
-- Configuration: `sourceknight.yaml` in repository root
-- Build command: SourceKnight automatically handles dependencies and compilation
-- Output: Compiled .smx files in `/addons/sourcemod/plugins`
-- Dependencies: Automatically downloads SourceMod version specified in config
+### Build System (GitHub Actions)
+This project compiles directly with spcomp in CI:
+- Configuration: `.github/workflows/ci.yml`
+- Build command: `spcomp` invoked directly in the workflow
+- Output: Compiled .smx files in `addons/sourcemod/plugins`
+- SourceMod compiler version pinned via `rumblefrog/setup-sp` (1.12.x)
 
 ### Project Structure
 ```
@@ -34,7 +34,6 @@ This project uses **SourceKnight** instead of traditional spcomp compilation:
 │   └── copilot-instructions.md # This file
 ├── addons/sourcemod/scripting/
 │   └── FixUpdateRadar.sp       # Main plugin source code
-├── sourceknight.yaml          # Build configuration
 └── .gitignore                  # Git ignore rules
 ```
 
@@ -91,11 +90,9 @@ public Plugin myinfo = {
 
 ### Building the Plugin
 ```bash
-# Using SourceKnight (automatic via CI/CD)
-sourceknight build
-
+# Using GitHub Actions (automatic via CI/CD)
 # Manual compilation (if needed for development)
-# SourceKnight handles this automatically
+spcomp -i include -o addons/sourcemod/plugins/FixUpdateRadar.smx addons/sourcemod/scripting/FixUpdateRadar.sp
 ```
 
 ### Testing Procedure
@@ -106,7 +103,7 @@ sourceknight build
 
 ### CI/CD Pipeline
 - **Trigger**: Push to any branch, PRs, manual dispatch
-- **Build**: Uses `maxime1907/action-sourceknight@v1` action
+- **Build**: Compiles directly with `spcomp` via `rumblefrog/setup-sp`
 - **Testing**: Compilation validation (no runtime tests currently)
 - **Release**: Automatic releases on main/master branch and tags
 - **Artifacts**: Creates `.tar.gz` packages with compiled plugins
@@ -151,7 +148,7 @@ The FixUpdateRadar plugin uses a sophisticated queuing system:
 4. Test thoroughly on servers with varying player counts
 
 ### Debugging Issues
-1. **Build Errors**: Check SourceKnight configuration and SourceMod version compatibility
+1. **Build Errors**: Check the GitHub Actions workflow configuration and SourceMod version compatibility
 2. **Runtime Issues**: Add logging with `LogMessage()` or `PrintToServer()`
 3. **Memory Issues**: Verify proper cleanup and queue management
 4. **Performance Issues**: Profile using SourceMod's built-in profiler
@@ -176,7 +173,7 @@ The FixUpdateRadar plugin uses a sophisticated queuing system:
 - Monitor queue usage to prevent overflow scenarios
 
 ### Compatibility Requirements
-- **Minimum SourceMod**: 1.11.0
+- **Minimum SourceMod**: 1.12.0
 - **Game Compatibility**: All Source engine games with radar functionality
 - **Server Requirements**: No additional dependencies beyond SourceMod
 
