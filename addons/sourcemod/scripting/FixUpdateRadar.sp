@@ -19,7 +19,7 @@ public Plugin myinfo =
 	name = "Fix Update Radar",
 	author = "GoD-Tony, maxime1907",
 	description = "Fixes the UpdateRadar usermessage on large servers",
-	version = "1.0.0",
+	version = "1.0.1",
 	url = "http://www.sourcemod.net/"
 };
 
@@ -40,14 +40,15 @@ public void OnClientDisconnect(int client)
 
 public Action Hook_UpdateRadar(UserMsg msg_id, Handle bf, const int[] players, int playersNum, bool reliable, bool init)
 {
-	if (BfGetNumBytesLeft(bf) > 253)
+	BfRead bfRead = UserMessageToBfRead(bf);
+	if (bfRead.BytesLeft > 253)
 	{
 		int count, index = GetOpenQueue();
 
 		// We don't want the closing byte.
-		while (BfGetNumBytesLeft(bf) > 1)
+		while (bfRead.BytesLeft > 1)
 		{
-			g_iBits[index][count] = BfReadBool(bf);
+			g_iBits[index][count] = bfRead.ReadBool();
 			count++;
 			
 			// 252 bytes
@@ -110,11 +111,13 @@ public void SendQueuedMsg(int index)
 	int count = 0;
 	while (g_iBits[index][count] != -1)
 	{
-		BfWriteBool(hBf, view_as<bool>(g_iBits[index][count]));
+		BfWrite bfWrite = UserMessageToBfWrite(hBf);
+		bfWrite.WriteBool(view_as<bool>(g_iBits[index][count]));
 		count++;
 	}
 
-	BfWriteByte(hBf, 0);
+	BfWrite bfWrite = UserMessageToBfWrite(hBf);
+	bfWrite.WriteByte(0);
 	EndMessage();
 }
 
