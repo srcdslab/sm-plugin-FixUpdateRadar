@@ -6,9 +6,12 @@
 
 // Should not need more than 16
 #define QUEUE_SIZE		24
+#define MAX_BYTES		252
 
 bool g_bQueued[QUEUE_SIZE];
-int g_iBits[QUEUE_SIZE][2048];
+int g_iBytes[QUEUE_SIZE][MAX_BYTES];
+int g_iBytesNum[QUEUE_SIZE];
+int g_iLastBit[QUEUE_SIZE];
 int g_iPlayers[QUEUE_SIZE][MAXPLAYERS+1];
 int g_iPlayersNum[QUEUE_SIZE];
 
@@ -19,7 +22,7 @@ public Plugin myinfo =
 	name = "Fix Update Radar",
 	author = "GoD-Tony, maxime1907",
 	description = "Fixes the UpdateRadar usermessage on large servers",
-	version = "1.0.1",
+	version = "1.0.2",
 	url = "http://www.sourcemod.net/"
 };
 
@@ -41,20 +44,24 @@ public void OnClientDisconnect(int client)
 public Action Hook_UpdateRadar(UserMsg msg_id, Handle bf, const int[] players, int playersNum, bool reliable, bool init)
 {
 	BfRead bfRead = UserMessageToBfRead(bf);
-	if (bfRead.BytesLeft > 253)
+	int bytesLeft = bfRead.BytesLeft;
+	if (bytesLeft > 253)
 	{
 		int count, index = GetOpenQueue();
 
 		// We don't want the closing byte.
-		while (bfRead.BytesLeft > 1)
+		// Copied a byte at a time, but the same bits as reading bit by bit while more than one byte is left:
+		// every byte except the last two, then one more bit.
+		for (int read = 0; read < bytesLeft - 2; read++)
 		{
-			g_iBits[index][count] = bfRead.ReadBool();
+			g_iBytes[index][count] = bfRead.ReadByte();
 			count++;
 			
 			// 252 bytes
-			if (count == 2016)
+			if (count == MAX_BYTES)
 			{
-				g_iBits[index][count] = -1;
+				g_iBytesNum[index] = count;
+				g_iLastBit[index] = -1;
 				g_iPlayersNum[index] = playersNum;
 				
 				for (int i = 0; i < playersNum; i++)
@@ -68,7 +75,8 @@ public Action Hook_UpdateRadar(UserMsg msg_id, Handle bf, const int[] players, i
 			}
 		}
 
-		g_iBits[index][count] = -1;
+		g_iBytesNum[index] = count;
+		g_iLastBit[index] = view_as<int>(bfRead.ReadBool());
 		g_iPlayersNum[index] = playersNum;
 		
 		for (int i = 0; i < playersNum; i++)
@@ -107,16 +115,16 @@ public void SendQueuedMsg(int index)
 		return;
 
 	Handle hBf = StartMessage("UpdateRadar", g_iPlayers[index], g_iPlayersNum[index], USERMSG_BLOCKHOOKS);
+	BfWrite bfWrite = UserMessageToBfWrite(hBf);
 
-	int count = 0;
-	while (g_iBits[index][count] != -1)
+	for (int i = 0; i < g_iBytesNum[index]; i++)
 	{
-		BfWrite bfWrite = UserMessageToBfWrite(hBf);
-		bfWrite.WriteBool(view_as<bool>(g_iBits[index][count]));
-		count++;
+		bfWrite.WriteByte(g_iBytes[index][i]);
 	}
 
-	BfWrite bfWrite = UserMessageToBfWrite(hBf);
+	if (g_iLastBit[index] != -1)
+		bfWrite.WriteBool(view_as<bool>(g_iLastBit[index]));
+
 	bfWrite.WriteByte(0);
 	EndMessage();
 }
