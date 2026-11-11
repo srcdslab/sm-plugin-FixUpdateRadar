@@ -22,7 +22,7 @@ public Plugin myinfo =
 	name = "Fix Update Radar",
 	author = "GoD-Tony, maxime1907",
 	description = "Fixes the UpdateRadar usermessage on large servers",
-	version = "1.0.2",
+	version = "1.0.3",
 	url = "http://www.sourcemod.net/"
 };
 
